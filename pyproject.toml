@@ -16,4 +16,7 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "pip>=26.0.1",
     "chardet>=5.2.0",
+    "psycopg2-binary>=2.9.11",
+    "asyncpg>=0.31.0",
+    "sqlalchemy[asyncio]>=2.0.46",
 ]
