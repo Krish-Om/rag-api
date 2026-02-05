@@ -57,7 +57,7 @@ class VectorService:
 
         Args:
             vectors: List of embedding vectors
-            chunk_ids: List of chunk IDs from SQL database
+            chunk_ids: List of chunk IDs from SQL database (can be empty)
             doc_id: Document ID from SQL database
             contents: List of text contents for each chunk
 
@@ -68,28 +68,40 @@ class VectorService:
             points = []
             vector_ids = []
 
+            # Handle case where chunk_ids might be empty (chunks not created yet)
+            if not chunk_ids:
+                chunk_ids = [None] * len(vectors)
+
             for i, (vector, chunk_id, content) in enumerate(
                 zip(vectors, chunk_ids, contents)
             ):
                 vector_id = str(uuid.uuid4())
                 vector_ids.append(vector_id)
 
+                payload = {
+                    "doc_id": doc_id,
+                    "content": content[:1000],  # Limit content size for storage
+                    "chunk_position": i,
+                }
+                
+                # Only add chunk_id to payload if it exists
+                if chunk_id is not None:
+                    payload["chunk_id"] = chunk_id
+
                 point = PointStruct(
                     id=vector_id,
                     vector=vector,
-                    payload={
-                        "chunk_id": chunk_id,
-                        "doc_id": doc_id,
-                        "content": content[:1000],  # Limit content size for storage
-                        "chunk_position": i,
-                    },
+                    payload=payload,
                 )
                 points.append(point)
 
             # Batch upload to Qdrant
-            self.client.upsert(collection_name=self.collection_name, points=points)
+            if points:  # Ensure we have points to upload
+                self.client.upsert(collection_name=self.collection_name, points=points)
+                logger.info(f"Stored {len(points)} vectors for document {doc_id}")
+            else:
+                logger.warning("No points to store - empty vectors list")
 
-            logger.info(f"Stored {len(points)} vectors for document {doc_id}")
             return vector_ids
 
         except Exception as e:
