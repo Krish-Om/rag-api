@@ -9,10 +9,7 @@ class EmbeddingService:
         model_name: str = "all-MiniLM-L6-v2"
         self.model = SentenceTransformer(model_name)
         self.dimension = 384  # model output dimension
-
-    def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
-        embeddings = self.model.encode(texts, convert_to_tensor=False)
-
+        
     def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
         embeddings = self.model.encode(texts, convert_to_tensor=False)
         return embeddings.tolist()
