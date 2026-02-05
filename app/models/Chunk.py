@@ -1,12 +1,9 @@
-from enum import Enum
+from typing import TYPE_CHECKING
 
-from Document import Document
 from sqlmodel import Field, Relationship, SQLModel
 
-
-class ChunkingStrategy(str, Enum):
-    FIXED_SIZE = "fixed_size"
-    SEMANTIC = "semantic"
+if TYPE_CHECKING:
+    from .Document import Document
 
 
 class Chunk(SQLModel, table=True):
@@ -17,4 +14,4 @@ class Chunk(SQLModel, table=True):
     chunk_position: int
     chunk_length: int
 
-    document: Document = Relationship(back_populates="chunks")
+    document: "Document" = Relationship(back_populates="chunks")

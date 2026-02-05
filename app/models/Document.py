@@ -1,8 +1,16 @@
 from datetime import datetime
 from enum import Enum
+from typing import TYPE_CHECKING
 
-from Chunk import Chunk, ChunkingStrategy
 from sqlmodel import Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from .Chunk import Chunk
+
+
+class ChunkingStrategy(str, Enum):
+    FIXED_SIZE = "fixed_size"
+    SEMANTIC = "semantic"
 
 
 class DocumentType(str, Enum):
