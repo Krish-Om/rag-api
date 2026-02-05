@@ -6,7 +6,7 @@ from sqlmodel import Field, Relationship, SQLModel
 
 class ChunkingStrategy(str, Enum):
     FIXED_SIZE = "fixed_size"
-    semantic = "semantic"
+    SEMANTIC = "semantic"
 
 
 class Chunk(SQLModel, table=True):
