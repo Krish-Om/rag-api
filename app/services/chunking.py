@@ -14,7 +14,7 @@ class ChunkResult:
     chunks: List[str]
     stratgey: ChunkingStrategy
     total_chunks: int
-    chunk_length: List[int]
+    chunk_lengths: List[int]
 
 
 class ChunkingService:
@@ -49,7 +49,7 @@ class ChunkingService:
         if strategy == ChunkingStrategy.FIXED_SIZE:
             chunks = self._fixed_size_chunking(text, chunk_size, overlap)
         elif strategy == ChunkingStrategy.SEMANTIC:
-            chunks = self._semantic_chunking(text, chunk_size)
+            chunks = self._spacy_semantic_chunking(text, chunk_size)
         else:
             raise ValueError(f"Unknown chunking strategy: {strategy}")
 
@@ -59,7 +59,7 @@ class ChunkingService:
             chunks=chunks,
             stratgey=strategy,
             total_chunks=len(chunks),
-            chunk_length=chunk_lengths,
+            chunk_lengths=chunk_lengths,
         )
 
     def _fixed_size_chunking(
@@ -91,7 +91,8 @@ class ChunkingService:
         return chunks
 
     def _spacy_semantic_chunking(self, text: str, max_chunk_size: int) -> List[str]:
-
+        if self.nlp is None:
+            return self._regex_semantic_chunking(text, max_chunk_size)
         doc = self.nlp(text=text)
         sentences = [sent.text.strip() for sent in doc.sents]
 
@@ -160,9 +161,6 @@ class ChunkingService:
         return chunks
 
     def _split_by_sentences(self, text: str) -> List[str]:
-        sentence_pattern: r"(?<=[.!?])\s+(?=[A-Z])"
+        sentence_pattern: str = r"(?<=[.!?])\s+(?=[A-Z])"
         sentences = re.split(sentence_pattern, text)
         return [s.strip() for s in sentences if s.strip()]
-
-
-chunking_service = ChunkingService()

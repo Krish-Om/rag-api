@@ -197,5 +197,3 @@ class VectorService:
             return False
 
 
-# Singleton instance
-vector_service = VectorService()

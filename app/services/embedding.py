@@ -19,4 +19,3 @@ class EmbeddingService:
         return embedding[0].tolist()
 
 
-embedding_service = EmbeddingService()
