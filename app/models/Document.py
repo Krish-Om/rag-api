@@ -1,7 +1,8 @@
 from datetime import datetime
 from enum import Enum
-from sqlmodel import SQLModel, Field, Relationship
-from Chunk import ChunkingStrategy, Chunk
+
+from Chunk import Chunk, ChunkingStrategy
+from sqlmodel import Field, Relationship, SQLModel
 
 
 class DocumentType(str, Enum):

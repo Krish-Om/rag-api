@@ -1,6 +1,7 @@
-from sqlmodel import SQLModel, Field, Relationship
 from enum import Enum
+
 from Document import Document
+from sqlmodel import Field, Relationship, SQLModel
 
 
 class ChunkingStrategy(str, Enum):
