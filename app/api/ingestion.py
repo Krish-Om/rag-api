@@ -28,14 +28,13 @@ async def upload_document(
     session: Session = Depends(get_session),
 ):
     """
-    Docstring for upload_document
     Upload and process a document (PDF or TXT)
 
-    :param file: pdf or txt
-    :type file: UploadFile
-    :param chunking_strategy: fixed_size or semantic
-    :type chunking_strategy: ChunkingStrategy
-    :param session: postgres database session
+    :param file: pdf or txt \n
+    :type file: UploadFile \n
+    :param chunking_strategy: fixed_size or semantic \n
+    :type chunking_strategy: ChunkingStrategy \n
+    :param session: postgres database session \n
     :type session: Session
 
     """
@@ -108,6 +107,7 @@ async def upload_document(
         logger.info(
             f"Document processing completed successfully: {filename} (ID: {doc_id})"
         )
+        return {"message": f"Document successfully uploaded"}
     except Exception as e:
         logger.error(f"Error processing document: {e}")
         session.rollback()
