@@ -2,11 +2,11 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: raguser
+      POSTGRES_PASSWORD: password123
       POSTGRES_DB: document_db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -47,7 +47,7 @@ services:
       - qdrant
       - ollama
     environment:
-      - DATABASE_URL=postgresql://postgres:password@postgres:5432/document_db
+      - DATABASE_URL=postgresql://raguser:password123@postgres:5432/document_db
       - REDIS_URL=redis://redis:6379
       - QDRANT_URL=http://qdrant:6333
       - OLLAMA_URL=http://ollama:11434
