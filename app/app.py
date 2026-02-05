@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from app.api.ingestion import ingestion_router
 
 app = FastAPI(
     title="RAG Api",
@@ -14,4 +14,4 @@ app.add_middleware(
     allow_headers=["*"],
     allow_credentials=True,
 )
-# app.include_router(ingestion_router)
+app.include_router(ingestion_router)
