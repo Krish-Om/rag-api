@@ -7,7 +7,7 @@ from sqlmodel import Session, SQLModel, create_engine
 load_dotenv()
 
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", default="postgresql://postgress:password@localhost:5432/document_db"
+    "DATABASE_URL", default="postgresql://raguser:password123@localhost:5433/document_db"
 )
 engine = create_engine(DATABASE_URL, echo=True)
 
