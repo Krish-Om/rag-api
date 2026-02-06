@@ -1,6 +1,4 @@
-def main():
-    print("Hello from rag-api!")
+import uvicorn
+from app import app
 
-
-if __name__ == "__main__":
-    main()
+uvicorn.run(app_dir="./app",app=app.app)
