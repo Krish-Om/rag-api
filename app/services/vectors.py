@@ -48,7 +48,7 @@ class VectorService:
     def store_vectors(
         self,
         vectors: List[List[float]],
-        chunk_ids: List[int],
+        chunk_ids: List[Optional[int]],
         doc_id: int,
         contents: List[str],
     ) -> List[str]:
@@ -83,7 +83,7 @@ class VectorService:
                     "content": content[:1000],  # Limit content size for storage
                     "chunk_position": i,
                 }
-                
+
                 # Only add chunk_id to payload if it exists
                 if chunk_id is not None:
                     payload["chunk_id"] = chunk_id
@@ -129,21 +129,22 @@ class VectorService:
                     must=[FieldCondition(key="doc_id", match=MatchValue(value=doc_id))]
                 )
 
-            search_result = self.client.search(
+            search_result = self.client.query_points(
                 collection_name=self.collection_name,
-                query_vector=query_vector,
+                query=query_vector,
                 query_filter=search_filter,
                 limit=limit,
                 with_payload=True,
             )
 
             results = []
-            for result in search_result:
+            for result in search_result.points:
+                payload = result.payload or {}
                 results.append(
                     {
-                        "chunk_id": result.payload["chunk_id"],
-                        "doc_id": result.payload["doc_id"],
-                        "content": result.payload["content"],
+                        "chunk_id": payload.get("chunk_id"),
+                        "doc_id": payload.get("doc_id"),
+                        "content": payload.get("content"),
                         "score": result.score,
                         "vector_id": result.id,
                     }
@@ -188,7 +189,7 @@ class VectorService:
             info = self.client.get_collection(self.collection_name)
             return {
                 "collection_name": self.collection_name,
-                "vectors_count": info.vectors_count,
+                "vectors_count": info.points_count,
                 "vector_size": self.vector_size,
                 "distance": "COSINE",
             }
@@ -207,5 +208,3 @@ class VectorService:
         except Exception as e:
             logger.error(f"Qdrant health check failed: {e}")
             return False
-
-
