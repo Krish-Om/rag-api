@@ -5,6 +5,7 @@ from .vectors import VectorService
 from .chat_memory import ChatMemoryService
 from .conversational_rag import ConversationalRAGService
 from .llm_service import LLMService
+from .booking_parser import BookingParser, BookingStatus
 
 __all__ = [
     "ChunkingService",
@@ -14,4 +15,6 @@ __all__ = [
     "ChatMemoryService",
     "ConversationalRAGService",
     "LLMService",
+    "BookingParser",
+    "BookingStatus",
 ]
