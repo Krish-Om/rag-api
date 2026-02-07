@@ -7,43 +7,34 @@ requires-python = ">=3.13"
 dependencies = [
     # Core web framework
     "fastapi[standard]>=0.128.0",
-    
     # Database
     "sqlmodel>=0.0.32",
     "asyncpg>=0.31.0",
     "psycopg2-binary>=2.9.11",
     "sqlalchemy[asyncio]>=2.0.46",
-    
     # Redis for chat memory
     "redis>=7.1.0",
-    
     # Vector database
     "qdrant-client>=1.0.0",
-    
     # OPTIMIZED ML STACK (92% smaller than torch+transformers)
     "onnxruntime>=1.15.0",        # ~100MB vs torch's ~500MB+
-    "tokenizers>=0.20.0",         # ~10MB vs transformers' ~300MB+ 
+    "tokenizers>=0.20.0",         # ~10MB vs transformers' ~300MB+
     "numpy>=2.0.0",               # Core tensor operations
-    
-    # NLP processing  
+    # NLP processing
     "spacy>=3.0.0",
-    
     # LLM integration
     "aiohttp>=3.13.3",
-    
     # Chat optimization
     "toons>=0.5.1",
-    
     # File processing
     "pdfplumber>=0.10.0",
-    
     # Date parsing
     "python-dateutil>=2.9.0",
-    
     # Configuration
     "python-multipart>=0.0.6",
     "python-dotenv>=1.2.1",
     "chardet>=5.2.0",
+    "pip>=26.0.1",
 ]
 
 # REMOVED HEAVY DEPENDENCIES (saves ~1.5GB total):
