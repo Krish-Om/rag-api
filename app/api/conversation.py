@@ -137,7 +137,7 @@ async def chat(request: ChatRequest, db: Session = Depends(get_session)):
                     "time": parsed_booking.time,
                     "type": parsed_booking.interview_type,
                 },
-                missing_fields=parsed_booking.missing_fields,
+                missing_fields=parsed_booking.missing_fields or [],
                 suggestions=validation_result.get("suggestions", []),
             )
 

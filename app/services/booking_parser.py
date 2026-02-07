@@ -549,7 +549,7 @@ response:"""
 
         validation_result["is_valid"] = (
             len(validation_result["errors"]) == 0
-            and len(booking_info.missing_fields) == 0
+            and len(booking_info.missing_fields or []) == 0
         )
 
         return validation_result
