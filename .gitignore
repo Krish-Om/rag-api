@@ -8,3 +8,16 @@ wheels/
 
 # Virtual environments
 .venv
+
+#vscode
+.vscode
+
+.env
+
+# ONNX models
+*_onnx/
+sentence-transformers_*_onnx/
+
+# Test files
+test_document.txt
+search_query.json
