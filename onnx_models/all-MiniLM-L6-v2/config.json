@@ -1,0 +1,12 @@
+{
+  "model_type": "sentence-transformers",
+  "model_name": "sentence-transformers/all-MiniLM-L6-v2",
+  "max_seq_length": 512,
+  "dimension": 384,
+  "do_lower_case": true,
+  "converted_by": "ONNX conversion script",
+  "runtime": "onnxruntime",
+  "providers": [
+    "CPUExecutionProvider"
+  ]
+}

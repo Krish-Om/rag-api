@@ -5,21 +5,34 @@ description = "RAG API with document ingestion and conversational chat"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    # Core web framework
     "fastapi[standard]>=0.128.0",
+    # Database
     "sqlmodel>=0.0.32",
+    "asyncpg>=0.31.0",
+    "psycopg2-binary>=2.9.11",
+    "sqlalchemy[asyncio]>=2.0.46",
+    # Redis for chat memory
+    "redis>=7.1.0",
+    # Vector database
     "qdrant-client>=1.0.0",
-    "optimum[onnxruntime]>=1.9.0",
-    "transformers>=4.30.0",
-    "torch>=2.0.0",
+    # ML dependencies (lightweight - ONNX only, no PyTorch)
     "onnxruntime>=1.15.0",
-    "pdfplumber",
-    "redis>=4.0.0",
+    "tokenizers>=0.20.0",
+    "numpy>=2.0.0",
+    # NLP processing
     "spacy>=3.0.0",
+    # LLM integration
+    "aiohttp>=3.13.3",
+    # Chat optimization
+    "toons>=0.5.1",
+    # File processing
+    "pdfplumber>=0.10.0",
+    # Date parsing
+    "python-dateutil>=2.9.0",
+    # Configuration
     "python-multipart>=0.0.6",
     "python-dotenv>=1.2.1",
-    "pip>=26.0.1",
     "chardet>=5.2.0",
-    "psycopg2-binary>=2.9.11",
-    "asyncpg>=0.31.0",
-    "sqlalchemy[asyncio]>=2.0.46",
+    "pip>=26.0.1",
 ]

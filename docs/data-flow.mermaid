@@ -1,0 +1,6 @@
+graph LR
+    A[User Query] --> B[Store in Redis]
+    B --> C[RAG Retrieval]
+    C --> D[LLM Generation]
+    D --> E[Store Response] 
+    E --> F[Return to User]
