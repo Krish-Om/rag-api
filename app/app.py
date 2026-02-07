@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.ingestion import ingestion_router
+from app.api import ingestion_router, conversation_router
 from app.database.redis_client import init_redis, close_redis
 
 
@@ -31,3 +31,4 @@ app.add_middleware(
     allow_credentials=True,
 )
 app.include_router(ingestion_router)
+app.include_router(conversation_router)
