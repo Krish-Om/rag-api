@@ -1,5 +1,6 @@
 import os
 import uuid
+import time
 from typing import Any, Dict, List, Optional
 
 from qdrant_client import QdrantClient
@@ -11,7 +12,7 @@ from qdrant_client.models import (
     FieldCondition,
     MatchValue,
 )
-from qdrant_client.http.exceptions import UnexpectedResponse
+from qdrant_client.http.exceptions import UnexpectedResponse, ResponseHandlingException
 import logging
 
 from app.config import config
@@ -21,26 +22,55 @@ logger = logging.getLogger(__name__)
 
 class VectorService:
     def __init__(self):
-        self.client = QdrantClient(url=config.qdrant_url)
+        self.qdrant_url = config.qdrant_url
+        self.client = None
         self.collection_name = "document_chunks"
         self.vector_size = 384  # all-MiniLM-L6-v2 dimensions
-        self._ensure_collection_exists()
+        self._initialized = False
+
+    def _get_client(self) -> QdrantClient:
+        """Get Qdrant client with connection retry logic"""
+        if self.client is None:
+            max_retries = 10
+            for attempt in range(max_retries):
+                try:
+                    self.client = QdrantClient(url=self.qdrant_url)
+                    # Test connection
+                    self.client.get_collections()
+                    logger.info(f"Connected to Qdrant at {self.qdrant_url}")
+                    break
+                except Exception as e:
+                    if attempt < max_retries - 1:
+                        wait_time = 2**attempt  # Exponential backoff
+                        logger.warning(
+                            f"Qdrant connection attempt {attempt + 1} failed: {e}, retrying in {wait_time}s..."
+                        )
+                        time.sleep(wait_time)
+                    else:
+                        logger.error(
+                            f"Failed to connect to Qdrant after {max_retries} attempts: {e}"
+                        )
+                        raise
+        return self.client
 
     def _ensure_collection_exists(self) -> None:
         """Create collection if it doesn't exist"""
         try:
-            collections = self.client.get_collections().collections
+            client = self._get_client()
+            collections = client.get_collections().collections
             collection_names = [col.name for col in collections]
 
             if self.collection_name not in collection_names:
                 logger.info(f"Creating collection: {self.collection_name}")
-                self.client.create_collection(
+                client.create_collection(
                     collection_name=self.collection_name,
                     vectors_config=VectorParams(
                         size=self.vector_size, distance=Distance.COSINE
                     ),
                 )
                 logger.info(f"Collection {self.collection_name} created successfully")
+
+            self._initialized = True
         except Exception as e:
             logger.error(f"Error ensuring collection exists: {e}")
             raise
@@ -65,6 +95,10 @@ class VectorService:
             List of vector IDs in Qdrant
         """
         try:
+            if not self._initialized:
+                self._ensure_collection_exists()
+
+            client = self._get_client()
             points = []
             vector_ids = []
 
@@ -97,7 +131,7 @@ class VectorService:
 
             # Batch upload to Qdrant
             if points:  # Ensure we have points to upload
-                self.client.upsert(collection_name=self.collection_name, points=points)
+                client.upsert(collection_name=self.collection_name, points=points)
                 logger.info(f"Stored {len(points)} vectors for document {doc_id}")
             else:
                 logger.warning("No points to store - empty vectors list")
@@ -123,13 +157,17 @@ class VectorService:
             List of similar chunks with scores and metadata
         """
         try:
+            if not self._initialized:
+                self._ensure_collection_exists()
+
+            client = self._get_client()
             search_filter = None
             if doc_id:
                 search_filter = Filter(
                     must=[FieldCondition(key="doc_id", match=MatchValue(value=doc_id))]
                 )
 
-            search_result = self.client.query_points(
+            search_result = client.query_points(
                 collection_name=self.collection_name,
                 query=query_vector,
                 query_filter=search_filter,
@@ -168,11 +206,15 @@ class VectorService:
             Success status
         """
         try:
+            if not self._initialized:
+                self._ensure_collection_exists()
+
+            client = self._get_client()
             delete_filter = Filter(
                 must=[FieldCondition(key="doc_id", match=MatchValue(value=doc_id))]
             )
 
-            self.client.delete(
+            client.delete(
                 collection_name=self.collection_name, points_selector=delete_filter
             )
 
@@ -186,7 +228,11 @@ class VectorService:
     def get_collection_info(self) -> Dict[str, Any]:
         """Get information about the vector collection"""
         try:
-            info = self.client.get_collection(self.collection_name)
+            if not self._initialized:
+                self._ensure_collection_exists()
+
+            client = self._get_client()
+            info = client.get_collection(self.collection_name)
             return {
                 "collection_name": self.collection_name,
                 "vectors_count": info.points_count,
@@ -200,7 +246,8 @@ class VectorService:
     def health_check(self) -> bool:
         """Check if Qdrant service is healthy"""
         try:
-            collections = self.client.get_collections()
+            client = self._get_client()
+            collections = client.get_collections()
             if collections:
                 return True
             else:

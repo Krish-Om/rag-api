@@ -1,4 +1,3 @@
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -43,12 +42,7 @@ services:
     volumes:
       - qdrant_data:/qdrant/storage
     restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:6333/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
+    # Note: No health check as Qdrant container lacks curl/wget
 
   ollama:
     image: ollama/ollama:latest
@@ -60,19 +54,14 @@ services:
     restart: unless-stopped
     environment:
       - OLLAMA_HOST=0.0.0.0
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:11434/api/version" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+    # Note: No health check as Ollama container lacks curl/wget
 
-  # Database migration init container
+    # Database migration init container
   migrate:
     build: .
     container_name: rag-migrate
     environment:
-      - DATABASE_URL=postgresql+asyncpg://raguser:password123@postgres:5432/document_db
+      - DATABASE_URL=postgresql://raguser:password123@postgres:5432/document_db # Use sync connection for migration
     depends_on:
       postgres:
         condition: service_healthy
@@ -84,23 +73,24 @@ services:
     container_name: rag-api
     ports:
       - "8000:8000"
+    volumes:
+      - ./onnx_models:/app/onnx_models:ro # Mount pre-converted ONNX model (read-only)
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
       qdrant:
-        condition: service_healthy
+        condition: service_started # No health check available
       ollama:
-        condition: service_healthy
+        condition: service_started # No health check available
       migrate:
         condition: service_completed_successfully
     environment:
       - DATABASE_URL=postgresql+asyncpg://raguser:password123@postgres:5432/document_db
       - REDIS_URL=redis://redis:6379/0
-      - QDRANT_HOST=qdrant
-      - QDRANT_PORT=6333
-      - OLLAMA_BASE_URL=http://ollama:11434
+      - QDRANT_URL=http://qdrant:6333
+      - OLLAMA_URL=http://ollama:11434
       - ENVIRONMENT=docker
     restart: unless-stopped
     healthcheck:

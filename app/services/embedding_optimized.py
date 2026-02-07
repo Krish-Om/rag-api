@@ -3,34 +3,37 @@ import numpy as np
 import onnxruntime as ort
 from tokenizers import Tokenizer
 import json
-import os
 from pathlib import Path
-import urllib.request
-import warnings
 
 
 class OptimizedEmbeddingService:
     """
     Pure ONNX Runtime embedding service with minimal dependencies.
     No PyTorch, no transformers - just onnxruntime + tokenizers.
+
+    Requires pre-converted ONNX model. Run scripts/convert_to_onnx.py first.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, model_dir: str = "onnx_models/all-MiniLM-L6-v2") -> None:
         # Model configuration
         self.model_name = "sentence-transformers/all-MiniLM-L6-v2"
         self.dimension = 384
         self.max_length = 512
 
-        # Paths for local model storage
-        self.model_dir = Path("./onnx_models/all-MiniLM-L6-v2")
+        # Paths for model files
+        self.model_dir = Path(model_dir)
         self.model_path = self.model_dir / "model.onnx"
         self.tokenizer_path = self.model_dir / "tokenizer.json"
         self.config_path = self.model_dir / "config.json"
 
-        # Ensure model directory exists
-        self.model_dir.mkdir(parents=True, exist_ok=True)
+        # Verify model exists
+        if not self.model_path.exists():
+            raise FileNotFoundError(
+                f"ONNX model not found at {self.model_path}. "
+                f"Run 'python scripts/convert_to_onnx.py' first to convert the model."
+            )
 
-        # Load or download model components
+        # Load model and tokenizer
         self._setup_model()
 
         print(
@@ -39,12 +42,7 @@ class OptimizedEmbeddingService:
         print(f"📦 Memory footprint: ~100MB (vs ~1GB+ with PyTorch)")
 
     def _setup_model(self) -> None:
-        """Setup ONNX model and tokenizer with minimal dependencies"""
-
-        # If model doesn't exist locally, we need to convert it
-        if not self.model_path.exists():
-            print("🔄 Converting model to ONNX format (one-time setup)...")
-            self._convert_to_onnx()
+        """Load pre-converted ONNX model and tokenizer"""
 
         # Load the ONNX model
         print(f"📥 Loading ONNX model from {self.model_path}")
@@ -73,54 +71,6 @@ class OptimizedEmbeddingService:
         else:
             # Default config
             self.config = {"max_seq_length": self.max_length, "do_lower_case": True}
-
-    def _convert_to_onnx(self) -> None:
-        """
-        Convert HuggingFace model to ONNX format.
-        This is a one-time conversion step that requires transformers.
-        """
-        try:
-            # Import only for conversion (this will be removed in production)
-            from optimum.onnxruntime import ORTModelForFeatureExtraction
-            from transformers import AutoTokenizer
-
-            print(
-                "🔄 Converting model to ONNX (requires transformers - will be removed after conversion)..."
-            )
-
-            # Load and convert model
-            tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-            model = ORTModelForFeatureExtraction.from_pretrained(
-                self.model_name, export=True, provider="CPUExecutionProvider"
-            )
-
-            # Save converted model
-            model.save_pretrained(self.model_dir)
-            tokenizer.save_pretrained(self.model_dir)
-
-            # Save tokenizer in fast tokenizers format
-            tokenizer_fast = tokenizer
-            if hasattr(tokenizer_fast, "backend_tokenizer"):
-                tokenizer_fast.backend_tokenizer.save(str(self.tokenizer_path))
-
-            # Create config
-            config = {
-                "model_type": "sentence-transformers",
-                "max_seq_length": self.max_length,
-                "do_lower_case": True,
-                "dimension": self.dimension,
-            }
-
-            with open(self.config_path, "w") as f:
-                json.dump(config, f, indent=2)
-
-            print(f"✅ Model converted and saved to {self.model_dir}")
-
-        except ImportError:
-            raise ImportError(
-                "Model conversion requires 'optimum[onnxruntime]' and 'transformers'. "
-                "Run: pip install optimum[onnxruntime] transformers"
-            )
 
     def _mean_pooling(
         self, token_embeddings: np.ndarray, attention_mask: np.ndarray
@@ -155,27 +105,36 @@ class OptimizedEmbeddingService:
         # Prepare inputs
         input_ids = []
         attention_masks = []
+        token_type_ids = []
 
         for encoding in encodings:
             # Truncate to max length
             ids = encoding.ids[: self.max_length]
             attention = encoding.attention_mask[: self.max_length]
+            type_ids = encoding.type_ids[: self.max_length]
 
             # Pad to max length
             if len(ids) < self.max_length:
                 padding_length = self.max_length - len(ids)
                 ids.extend([0] * padding_length)  # 0 is typically the pad token
                 attention.extend([0] * padding_length)
+                type_ids.extend([0] * padding_length)
 
             input_ids.append(ids)
             attention_masks.append(attention)
+            token_type_ids.append(type_ids)
 
         # Convert to numpy arrays
         input_ids = np.array(input_ids, dtype=np.int64)
         attention_masks = np.array(attention_masks, dtype=np.int64)
+        token_type_ids = np.array(token_type_ids, dtype=np.int64)
 
         # Run inference
-        inputs = {"input_ids": input_ids, "attention_mask": attention_masks}
+        inputs = {
+            "input_ids": input_ids,
+            "attention_mask": attention_masks,
+            "token_type_ids": token_type_ids,
+        }
 
         outputs = self.session.run(None, inputs)
         token_embeddings = outputs[0]  # Shape: (batch_size, seq_len, hidden_size)

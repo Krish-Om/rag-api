@@ -1,7 +1,5 @@
 from .chunking import ChunkingService
-from .embedding_optimized import (
-    OptimizedEmbeddingService as EmbeddingService,
-)  # Use optimized ONNX version
+from .embedding_optimized import OptimizedEmbeddingService as EmbeddingService
 from .text_extraction import TextExtractionService
 from .vectors import VectorService
 from .chat_memory import ChatMemoryService

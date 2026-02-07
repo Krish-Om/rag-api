@@ -6,7 +6,11 @@ load_dotenv()
 
 class Config:
     def __init__(self):
-        self.qdrant_url = os.getenv("QDRANT_URL", "http://localhost:6333")
+        # Qdrant URL: support both QDRANT_URL or build from QDRANT_HOST+QDRANT_PORT
+        qdrant_host = os.getenv("QDRANT_HOST", "localhost")
+        qdrant_port = os.getenv("QDRANT_PORT", "6333")
+        self.qdrant_url = os.getenv("QDRANT_URL", f"http://{qdrant_host}:{qdrant_port}")
+
         self.db_url = os.getenv(
             "DATABASE_URL", "postgresql://postgres:password@localhost:5432/document_db"
         )

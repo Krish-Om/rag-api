@@ -66,7 +66,7 @@ class LLMService:
         }
 
         return toons.dumps(
-            context_data, indent=0, delimiter=",", key_folding="short", flatten_depth=1
+            context_data, indent=2, delimiter=",", key_folding="short", flatten_depth=1
         )
 
     async def _call_ollama(self, prompt: str) -> str:

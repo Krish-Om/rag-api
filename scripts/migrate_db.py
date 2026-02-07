@@ -12,9 +12,9 @@ from pathlib import Path
 # Add the app directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.database.db import init_db, engine
+from app.database.db import init_db, sync_engine as engine
 from sqlalchemy.exc import OperationalError
-from sqlmodel import text
+import sqlalchemy as sa
 
 
 def wait_for_db(max_retries=30, delay=2):
@@ -23,19 +23,21 @@ def wait_for_db(max_retries=30, delay=2):
 
     for attempt in range(max_retries):
         try:
+            # Use raw connection to test
             with engine.connect() as conn:
-                conn.execute(text("SELECT 1"))
+                result = conn.execute(sa.text("SELECT 1"))
+                result.fetchone()
             print("✅ PostgreSQL is ready!")
             return True
-        except OperationalError as e:
+        except Exception as e:
             print(
                 f"⏳ Attempt {attempt + 1}/{max_retries}: PostgreSQL not ready yet..."
             )
+            print(f"   Error: {e}")
             if attempt == max_retries - 1:
                 print(
                     f"❌ Failed to connect to PostgreSQL after {max_retries} attempts"
                 )
-                print(f"   Error: {e}")
                 return False
             time.sleep(delay)
 
@@ -60,7 +62,7 @@ def run_migrations():
         with engine.connect() as conn:
             # Check if main tables exist
             result = conn.execute(
-                text(
+                sa.text(
                     """
                 SELECT table_name 
                 FROM information_schema.tables 
@@ -82,6 +84,9 @@ def run_migrations():
 
     except Exception as e:
         print(f"❌ Database migration failed: {e}")
+        import traceback
+
+        traceback.print_exc()
         return False
 
 

@@ -16,10 +16,10 @@ dependencies = [
     "redis>=7.1.0",
     # Vector database
     "qdrant-client>=1.0.0",
-    # OPTIMIZED ML STACK (92% smaller than torch+transformers)
-    "onnxruntime>=1.15.0",        # ~100MB vs torch's ~500MB+
-    "tokenizers>=0.20.0",         # ~10MB vs transformers' ~300MB+
-    "numpy>=2.0.0",               # Core tensor operations
+    # ML dependencies (lightweight - ONNX only, no PyTorch)
+    "onnxruntime>=1.15.0",
+    "tokenizers>=0.20.0",
+    "numpy>=2.0.0",
     # NLP processing
     "spacy>=3.0.0",
     # LLM integration
@@ -35,24 +35,4 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "chardet>=5.2.0",
     "pip>=26.0.1",
-]
-
-# REMOVED HEAVY DEPENDENCIES (saves ~1.5GB total):
-# "torch>=2.0.0"              # ~500MB + CUDA dependencies ~1GB  
-# "transformers>=4.30.0"       # ~300MB
-# "optimum[onnxruntime]>=1.9.0" # Depends on transformers
-
-[project.optional-dependencies]
-# Heavy dependencies only needed for one-time model conversion
-conversion = [
-    "torch>=2.0.0",
-    "transformers>=4.30.0", 
-    "optimum[onnxruntime]>=1.9.0",
-]
-
-# Development dependencies
-dev = [
-    "pytest>=7.0.0",
-    "pytest-asyncio>=0.21.0",
-    "httpx>=0.24.0",  # for testing
 ]

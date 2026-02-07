@@ -34,7 +34,7 @@ class ConversationalRAGService:
     async def _retrieve_context(self,query:str) -> List[Dict]:
         """Basic context retrieval"""
         try:
-            q_vector = self.embedding_service.generate_single_embeddings(query)
+            q_vector = self.embedding_service.generate_single_embedding(query)
 
             similar_chunks = self.vector_service.search_similar(
                 query_vector=q_vector,
