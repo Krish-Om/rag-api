@@ -143,41 +143,51 @@ async def chat(request: ChatRequest, db: Session = Depends(get_session)):
 
             # Store booking if valid and all fields are present
             if (
-                parsed_booking.status
-                == ParserBookingStatus.VALID  # Fixed: use renamed import
+                parsed_booking.status == ParserBookingStatus.VALID
                 and validation_result["is_valid"]
-                and parsed_booking.date  # Fixed: ensure not None
-                and parsed_booking.time  # Fixed: ensure not None
+                and parsed_booking.name  # Ensure name not None
+                and parsed_booking.email  # Ensure email not None
+                and parsed_booking.date  # Ensure date not None
+                and parsed_booking.time  # Ensure time not None
+                and parsed_booking.interview_type  # Ensure interview_type not None
             ):
                 try:
+                    # Validate interview type before conversion
+                    interview_type_value = parsed_booking.interview_type.lower()
+                    if interview_type_value not in [e.value for e in InterviewType]:
+                        interview_type_value = "general"  # Fallback to general
+
                     booking = BookingModel(
                         session_id=session_id,
-                        name=parsed_booking.name,
-                        email=parsed_booking.email,
+                        name=parsed_booking.name,  # Now guaranteed not None
+                        email=parsed_booking.email,  # Now guaranteed not None
                         booking_date=datetime.strptime(
-                            parsed_booking.date,
-                            "%Y-%m-%d",  # Now safe since we checked for None
+                            parsed_booking.date, "%Y-%m-%d"  # Now guaranteed not None
                         ).date(),
                         booking_time=datetime.strptime(
-                            parsed_booking.time,
-                            "%H:%M",  # Now safe since we checked for None
+                            parsed_booking.time, "%H:%M"  # Now guaranteed not None
                         ).time(),
-                        interview_type=InterviewType(parsed_booking.interview_type),
+                        interview_type=InterviewType(
+                            interview_type_value
+                        ),  # Now safely converted
                         status=DBBookingStatus.PENDING,
-                        confidence_score=parsed_booking.confidence,  # Fixed: correct field name
+                        confidence_score=parsed_booking.confidence,
                         extracted_text=parsed_booking.extracted_text,
                     )
 
                     db.add(booking)
-                    db.commit()  # Fixed: removed await (sync operation)
+                    db.commit()
                     db.refresh(booking)
 
                     booking_response.booking_id = booking.id
-                    logger.info(f"Booking created with ID: {booking.id}")
+                    logger.info(f"Booking successfully created with ID: {booking.id}")
 
+                except ValueError as e:
+                    logger.error(f"Data validation error: {e}")
+                    db.rollback()
                 except Exception as e:
-                    logger.error(f"Error storing booking: {e}")
-                    db.rollback()  # Fixed: removed await (sync operation)
+                    logger.error(f"Unexpected error storing booking: {e}")
+                    db.rollback()
 
             # Set booking_info for the response
             booking_info = booking_response
