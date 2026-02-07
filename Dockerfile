@@ -14,8 +14,6 @@ WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 ENV UV_NO_DEV=1
-# Ensure CPU-only PyTorch for smaller builds
-ENV PIP_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
