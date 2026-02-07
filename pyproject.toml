@@ -23,4 +23,5 @@ dependencies = [
     "sqlalchemy[asyncio]>=2.0.46",
     "redis>=7.1.0",
     "toons>=0.5.1",
+    "aiohttp>=3.13.3",
 ]
