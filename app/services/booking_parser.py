@@ -26,7 +26,7 @@ class BookingInfo:
     interview_type: Optional[str] = None
     status: BookingStatus = BookingStatus.INCOMPLETE
     confidence: float = 0.0
-    missing_fields: List[str] = None
+    missing_fields: Optional[List[str]] = None
     extracted_text: str = ""
 
     def __post_init__(self):
