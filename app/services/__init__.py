@@ -3,6 +3,7 @@ from .embedding import EmbeddingService
 from .text_extraction import TextExtractionService
 from .vectors import VectorService
 from .chat_memory import ChatMemoryService
+from .conversational_rag import ConversationalRAGService
 from .llm_service import LLMService
 
 __all__ = [
@@ -11,5 +12,6 @@ __all__ = [
     "TextExtractionService",
     "VectorService",
     "ChatMemoryService",
+    "ConversationalRAGService",
     "LLMService",
 ]
